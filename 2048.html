@@ -1,0 +1,805 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
+<meta name="theme-color" content="#faf8ef" />
+<title>2048</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: "Segoe UI", "PingFang SC", "Microsoft YaHei", "Helvetica Neue", sans-serif;
+    /* ---- 经典主题（默认变量，其余主题在各 data-theme 块中覆盖） ---- */
+    --bg: #faf8ef;
+    --fg: #776e65;
+    --title: #776e65;
+    --title-shadow: none;
+    --box-bg: #bbada0; --box-fg: #ffffff; --box-label: #eee4da; --box-shadow: none;
+    --btn-bg: #8f7a66; --btn-fg: #f9f6f2; --btn-hover: #9f8b77; --btn-active: #7f6a56;
+    --board-bg: #bbada0; --cell-bg: rgba(238, 228, 218, 0.35); --board-shadow: none;
+    --tile-2-bg: #eee4da; --tile-2-fg: #776e65;
+    --tile-4-bg: #ede0c8; --tile-4-fg: #776e65;
+    --tile-8-bg: #f2b179; --tile-8-fg: #f9f6f2;
+    --tile-16-bg: #f59563; --tile-16-fg: #f9f6f2;
+    --tile-32-bg: #f67c5f; --tile-32-fg: #f9f6f2;
+    --tile-64-bg: #f65e3b; --tile-64-fg: #f9f6f2;
+    --tile-128-bg: #edcf72; --tile-128-fg: #f9f6f2;
+    --tile-256-bg: #edcc61; --tile-256-fg: #f9f6f2;
+    --tile-512-bg: #edc850; --tile-512-fg: #f9f6f2;
+    --tile-1024-bg: #edc53f; --tile-1024-fg: #f9f6f2;
+    --tile-2048-bg: #edc22e; --tile-2048-fg: #f9f6f2;
+    --tile-super-bg: #3c3a32; --tile-super-fg: #f9f6f2;
+    --tile-glow: 0 0 24px 4px rgba(237, 194, 46, .45);
+    --tile-cyan-glow: none; --tile-magenta-glow: none; --tile-gold-glow: none;
+    --overlay-bg: rgba(238, 228, 218, 0.75); --overlay-win-bg: rgba(237, 194, 46, 0.5);
+    --hint: #a99f95;
+    --panel-bg: #ffffff; --panel-fg: #776e65; --accent: #8f7a66;
+
+    background: var(--bg);
+    color: var(--fg);
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    padding: 28px 12px 40px;
+    -webkit-tap-highlight-color: transparent;
+    user-select: none;
+  }
+
+  /* ---- 暗夜主题 ---- */
+  body[data-theme="dark"] {
+    --bg: linear-gradient(180deg, #24243a 0%, #14141c 420px);
+    --fg: #b9b9ca; --title: #f2f2fa;
+    --box-bg: #262640; --box-fg: #ffffff; --box-label: #8d8da6;
+    --btn-bg: #3c3c58; --btn-fg: #f0f0f8; --btn-hover: #4a4a6a; --btn-active: #2e2e46;
+    --board-bg: #20202e; --cell-bg: rgba(255, 255, 255, 0.06); --board-shadow: 0 8px 30px rgba(0, 0, 0, .5);
+    --tile-2-bg: #2c2c40; --tile-2-fg: #c6c6d8;
+    --tile-4-bg: #34344c; --tile-4-fg: #d4d4e6;
+    --tile-8-bg: #5749a8; --tile-8-fg: #ffffff;
+    --tile-16-bg: #6c57cf; --tile-16-fg: #ffffff;
+    --tile-32-bg: #7f5ce8; --tile-32-fg: #ffffff;
+    --tile-64-bg: #8a4ff0; --tile-64-fg: #ffffff;
+    --tile-128-bg: #2fb8e8; --tile-128-fg: #062a38;
+    --tile-256-bg: #1fa8d8; --tile-256-fg: #062a38;
+    --tile-512-bg: #e84fd0; --tile-512-fg: #ffffff;
+    --tile-1024-bg: #f2b632; --tile-1024-fg: #3a2608;
+    --tile-2048-bg: #ffd23e; --tile-2048-fg: #3a2608;
+    --tile-super-bg: #10101c; --tile-super-fg: #cfcfe8;
+    --tile-glow: 0 0 28px 6px rgba(255, 210, 62, .35);
+    --overlay-bg: rgba(20, 20, 32, 0.8); --overlay-win-bg: rgba(242, 182, 50, 0.22);
+    --hint: #6f6f8a;
+    --panel-bg: #222234; --panel-fg: #e6e6f2; --accent: #7f5ce8;
+  }
+
+  /* ---- 海洋主题 ---- */
+  body[data-theme="ocean"] {
+    --bg: linear-gradient(180deg, #ecf7ff 0%, #d4ecfb 100%);
+    --fg: #3a6584; --title: #0a5d9e;
+    --box-bg: #1f7cc0; --box-fg: #ffffff; --box-label: #cfe9fb;
+    --btn-bg: #0e639e; --btn-fg: #ffffff; --btn-hover: #1577b8; --btn-active: #0a5486;
+    --board-bg: #1f7cc0; --cell-bg: rgba(255, 255, 255, 0.22); --board-shadow: 0 8px 24px rgba(16, 86, 140, .25);
+    --tile-2-bg: #eef9ff; --tile-2-fg: #1a659e;
+    --tile-4-bg: #daf0fe; --tile-4-fg: #1a659e;
+    --tile-8-bg: #a5dcf9; --tile-8-fg: #14557f;
+    --tile-16-bg: #6fc4f2; --tile-16-fg: #0d3d60;
+    --tile-32-bg: #1b8ad6; --tile-32-fg: #ffffff;
+    --tile-64-bg: #0f76c4; --tile-64-fg: #ffffff;
+    --tile-128-bg: #0c64a8; --tile-128-fg: #ffffff;
+    --tile-256-bg: #0a548c; --tile-256-fg: #ffffff;
+    --tile-512-bg: #074271; --tile-512-fg: #ffffff;
+    --tile-1024-bg: #f2b940; --tile-1024-fg: #3a2608;
+    --tile-2048-bg: #f59e1f; --tile-2048-fg: #3a2608;
+    --tile-super-bg: #04304f; --tile-super-fg: #cfe9fb;
+    --tile-glow: 0 0 24px 4px rgba(245, 158, 31, .5);
+    --overlay-bg: rgba(212, 236, 251, 0.8); --overlay-win-bg: rgba(245, 158, 31, 0.35);
+    --hint: #7d9cb4;
+    --panel-bg: #ffffff; --panel-fg: #3a6584; --accent: #0e639e;
+  }
+
+  /* ---- 森林主题 ---- */
+  body[data-theme="forest"] {
+    --bg: linear-gradient(180deg, #f1f8ec 0%, #e2f0dc 100%);
+    --fg: #4c6b52; --title: #2c6b39;
+    --box-bg: #3f9153; --box-fg: #ffffff; --box-label: #d8f0df;
+    --btn-bg: #2c6b39; --btn-fg: #f4fbf4; --btn-hover: #37854a; --btn-active: #24572f;
+    --board-bg: #3f9153; --cell-bg: rgba(255, 255, 255, 0.22); --board-shadow: 0 8px 24px rgba(44, 107, 57, .25);
+    --tile-2-bg: #f0f8e9; --tile-2-fg: #2c6b39;
+    --tile-4-bg: #dff0d2; --tile-4-fg: #2c6b39;
+    --tile-8-bg: #b7e094; --tile-8-fg: #25592f;
+    --tile-16-bg: #8ed063; --tile-16-fg: #1e4a28;
+    --tile-32-bg: #4faf33; --tile-32-fg: #103a1c;
+    --tile-64-bg: #3c9c2c; --tile-64-fg: #ffffff;
+    --tile-128-bg: #2c8530; --tile-128-fg: #ffffff;
+    --tile-256-bg: #23712c; --tile-256-fg: #ffffff;
+    --tile-512-bg: #1b5c28; --tile-512-fg: #ffffff;
+    --tile-1024-bg: #ecc94e; --tile-1024-fg: #3a2c08;
+    --tile-2048-bg: #e8b03a; --tile-2048-fg: #3a2c08;
+    --tile-super-bg: #143f1d; --tile-super-fg: #dff0d2;
+    --tile-glow: 0 0 24px 4px rgba(232, 176, 58, .45);
+    --overlay-bg: rgba(226, 240, 220, 0.82); --overlay-win-bg: rgba(232, 176, 58, 0.35);
+    --hint: #7d997f;
+    --panel-bg: #ffffff; --panel-fg: #4c6b52; --accent: #2c6b39;
+  }
+
+  /* ---- 樱花主题 ---- */
+  body[data-theme="sakura"] {
+    --bg: linear-gradient(180deg, #fdf3f8 0%, #fbe7f0 100%);
+    --fg: #8a5f74; --title: #d44a86;
+    --box-bg: #ec8ab4; --box-fg: #ffffff; --box-label: #fde6f0;
+    --btn-bg: #d44a86; --btn-fg: #ffffff; --btn-hover: #dd639b; --btn-active: #bf3a74;
+    --board-bg: #ec8ab4; --cell-bg: rgba(255, 255, 255, 0.3); --board-shadow: 0 8px 24px rgba(212, 74, 134, .25);
+    --tile-2-bg: #fdf1f6; --tile-2-fg: #b04a78;
+    --tile-4-bg: #fce3ee; --tile-4-fg: #b04a78;
+    --tile-8-bg: #f9c3da; --tile-8-fg: #93355f;
+    --tile-16-bg: #f6a9c9; --tile-16-fg: #7c2a50;
+    --tile-32-bg: #ee7fa9; --tile-32-fg: #6b1f45;
+    --tile-64-bg: #e25f96; --tile-64-fg: #ffffff;
+    --tile-128-bg: #d44683; --tile-128-fg: #ffffff;
+    --tile-256-bg: #c03471; --tile-256-fg: #ffffff;
+    --tile-512-bg: #a82860; --tile-512-fg: #ffffff;
+    --tile-1024-bg: #8f1f52; --tile-1024-fg: #ffffff;
+    --tile-2048-bg: #7d1847; --tile-2048-fg: #ffffff;
+    --tile-super-bg: #5e1134; --tile-super-fg: #fde6f0;
+    --tile-glow: 0 0 24px 4px rgba(226, 95, 150, .5);
+    --overlay-bg: rgba(251, 231, 240, 0.85); --overlay-win-bg: rgba(226, 95, 150, 0.3);
+    --hint: #b28a9c;
+    --panel-bg: #ffffff; --panel-fg: #8a5f74; --accent: #d44a86;
+  }
+
+  /* ---- 霓虹（赛博朋克）主题 ---- */
+  body[data-theme="neon"] {
+    --bg: linear-gradient(180deg, #200f3f 0%, #0d0518 60%);
+    --fg: #a99be0; --title: #00e5ff; --title-shadow: 0 0 18px rgba(0, 229, 255, .55);
+    --box-bg: #251348; --box-fg: #00e5ff; --box-label: #7a6cc4; --box-shadow: inset 0 0 0 1px rgba(0, 229, 255, .22);
+    --btn-bg: #e02bd6; --btn-fg: #ffffff; --btn-hover: #f040e0; --btn-active: #c01bb5;
+    --board-bg: #160a2e; --cell-bg: rgba(0, 229, 255, 0.06); --board-shadow: inset 0 0 0 1px rgba(255, 43, 214, .35), 0 0 28px rgba(0, 229, 255, .18);
+    --tile-2-bg: #221448; --tile-2-fg: #b3a2f5;
+    --tile-4-bg: #2b1b60; --tile-4-fg: #c4b6f8;
+    --tile-8-bg: #43299c; --tile-8-fg: #ffffff;
+    --tile-16-bg: #5b2fd4; --tile-16-fg: #ffffff;
+    --tile-32-bg: #00d0ff; --tile-32-fg: #041a26;
+    --tile-64-bg: #00b4e8; --tile-64-fg: #041a26;
+    --tile-128-bg: #ff2bd6; --tile-128-fg: #ffffff;
+    --tile-256-bg: #ee1ec4; --tile-256-fg: #ffffff;
+    --tile-512-bg: #d013a6; --tile-512-fg: #ffffff;
+    --tile-1024-bg: #ffd23e; --tile-1024-fg: #2b1c00;
+    --tile-2048-bg: #ffb800; --tile-2048-fg: #2b1c00;
+    --tile-super-bg: #0a0516; --tile-super-fg: #00e5ff;
+    --tile-glow: 0 0 30px 8px rgba(255, 184, 0, .5);
+    --tile-cyan-glow: 0 0 14px rgba(0, 208, 255, .5);
+    --tile-magenta-glow: 0 0 14px rgba(255, 43, 214, .45);
+    --tile-gold-glow: 0 0 16px rgba(255, 210, 62, .4);
+    --overlay-bg: rgba(10, 5, 26, 0.8); --overlay-win-bg: rgba(0, 208, 255, 0.2);
+    --hint: #6f5fb8;
+    --panel-bg: #1c1038; --panel-fg: #d8d0f5; --accent: #00e5ff;
+  }
+
+  .container { width: min(92vw, 460px); }
+
+  header { display: flex; justify-content: space-between; align-items: center; }
+  h1 { font-size: 58px; font-weight: 800; letter-spacing: 1px; color: var(--title); text-shadow: var(--title-shadow); }
+  .scores { display: flex; gap: 8px; }
+  .score-box {
+    background: var(--box-bg); color: var(--box-fg); border-radius: 6px;
+    padding: 7px 16px 9px; min-width: 80px; text-align: center;
+    box-shadow: var(--box-shadow);
+  }
+  .score-box .label { font-size: 11px; letter-spacing: 1px; color: var(--box-label); }
+  .score-box .value { font-size: 24px; font-weight: 700; display: inline-block; }
+  .score-box.pop .value { animation: score-pop 180ms ease; }
+  @keyframes score-pop { 50% { transform: scale(1.25); } }
+
+  .toolbar { display: flex; flex-wrap: wrap; gap: 8px; justify-content: space-between; align-items: center; margin-top: 14px; }
+  .toolbar p { font-size: 15px; white-space: nowrap; }
+  .toolbar b { font-weight: 800; }
+  .toolbar-actions { display: flex; gap: 8px; margin-left: auto; }
+
+  .btn {
+    background: var(--btn-bg); color: var(--btn-fg); border: none; border-radius: 6px;
+    padding: 10px 18px; font-size: 15px; font-weight: 700; cursor: pointer;
+    transition: background 250ms ease;
+  }
+  .btn:hover { background: var(--btn-hover); }
+  .btn:active { background: var(--btn-active); }
+  .btn:disabled { opacity: 0.45; cursor: default; }
+  .btn:disabled:hover, .btn:disabled:active { background: var(--btn-bg); }
+
+  .board {
+    --cell: 90px;
+    position: relative;
+    margin-top: 16px;
+    padding: 12px;
+    background: var(--board-bg);
+    border-radius: 8px;
+    box-shadow: var(--board-shadow);
+    touch-action: none;
+  }
+  .bg {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+  }
+  .bg div {
+    aspect-ratio: 1;
+    background: var(--cell-bg);
+    border-radius: 6px;
+  }
+
+  #tile-layer { position: absolute; inset: 0; }
+  .tile {
+    position: absolute;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 800;
+    border-radius: 6px;
+    transform: translate(var(--x), var(--y));
+    transition: transform 130ms ease-in-out, background-color 250ms ease, color 250ms ease, box-shadow 250ms ease;
+    font-size: calc(var(--cell) * 0.45);
+    z-index: 1;
+  }
+  .tile.absorbed { z-index: 2; }
+  .tile.new { animation: pop-in 180ms ease; }
+  .tile.pop { animation: merge-pop 180ms ease; }
+  @keyframes pop-in {
+    from { transform: translate(var(--x), var(--y)) scale(0); }
+    to   { transform: translate(var(--x), var(--y)) scale(1); }
+  }
+  @keyframes merge-pop {
+    0%   { transform: translate(var(--x), var(--y)) scale(1); }
+    50%  { transform: translate(var(--x), var(--y)) scale(1.22); }
+    100% { transform: translate(var(--x), var(--y)) scale(1); }
+  }
+
+  .tile.d4 { font-size: calc(var(--cell) * 0.34); }
+  .tile.d5 { font-size: calc(var(--cell) * 0.27); }
+  .tile.d6 { font-size: calc(var(--cell) * 0.23); }
+
+  .tile[data-value="2"]    { background: var(--tile-2-bg);    color: var(--tile-2-fg); }
+  .tile[data-value="4"]    { background: var(--tile-4-bg);    color: var(--tile-4-fg); }
+  .tile[data-value="8"]    { background: var(--tile-8-bg);    color: var(--tile-8-fg); }
+  .tile[data-value="16"]   { background: var(--tile-16-bg);   color: var(--tile-16-fg); }
+  .tile[data-value="32"]   { background: var(--tile-32-bg);   color: var(--tile-32-fg); box-shadow: var(--tile-cyan-glow); }
+  .tile[data-value="64"]   { background: var(--tile-64-bg);   color: var(--tile-64-fg); box-shadow: var(--tile-cyan-glow); }
+  .tile[data-value="128"]  { background: var(--tile-128-bg);  color: var(--tile-128-fg); box-shadow: var(--tile-magenta-glow); }
+  .tile[data-value="256"]  { background: var(--tile-256-bg);  color: var(--tile-256-fg); box-shadow: var(--tile-magenta-glow); }
+  .tile[data-value="512"]  { background: var(--tile-512-bg);  color: var(--tile-512-fg); box-shadow: var(--tile-magenta-glow); }
+  .tile[data-value="1024"] { background: var(--tile-1024-bg); color: var(--tile-1024-fg); box-shadow: var(--tile-gold-glow); }
+  .tile[data-value="2048"] { background: var(--tile-2048-bg); color: var(--tile-2048-fg); box-shadow: var(--tile-glow); }
+  .tile.super { background: var(--tile-super-bg); color: var(--tile-super-fg); }
+
+  .overlay {
+    position: absolute; inset: 0; z-index: 10;
+    background: var(--overlay-bg);
+    border-radius: 8px;
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 14px;
+    animation: fade-in 300ms ease;
+  }
+  .overlay.show { display: flex; }
+  .overlay.win { background: var(--overlay-win-bg); }
+  .overlay .msg { font-size: 40px; font-weight: 800; }
+  .overlay .sub { font-size: 16px; }
+  .overlay .row { display: flex; gap: 10px; }
+  @keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }
+
+  .hint { text-align: center; margin-top: 18px; font-size: 13px; color: var(--hint); }
+
+  /* ---- 个性化主题面板 ---- */
+  .theme-panel {
+    position: fixed; inset: 0; z-index: 100;
+    background: rgba(0, 0, 0, 0.45);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+  }
+  .theme-panel.show { display: flex; animation: fade-in 200ms ease; }
+  .panel-card {
+    background: var(--panel-bg); color: var(--panel-fg);
+    border-radius: 14px;
+    padding: 20px;
+    width: min(92vw, 420px);
+    max-height: 86vh;
+    overflow: auto;
+    box-shadow: 0 16px 48px rgba(0, 0, 0, 0.3);
+    animation: panel-in 220ms ease;
+  }
+  @keyframes panel-in {
+    from { opacity: 0; transform: translateY(12px) scale(0.96); }
+    to   { opacity: 1; transform: none; }
+  }
+  .panel-head { display: flex; justify-content: space-between; align-items: center; }
+  .panel-head h2 { font-size: 20px; font-weight: 800; }
+  .panel-sub { font-size: 12px; margin-top: 4px; opacity: 0.65; }
+  .panel-close {
+    background: none; border: none; font-size: 18px; color: inherit;
+    cursor: pointer; opacity: 0.6; padding: 4px 8px; border-radius: 6px;
+  }
+  .panel-close:hover { opacity: 1; background: rgba(128, 128, 128, 0.15); }
+
+  .theme-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-top: 16px; }
+  .theme-card {
+    position: relative;
+    background: none; border: 2px solid transparent; border-radius: 10px;
+    padding: 8px; cursor: pointer; color: inherit; font: inherit; text-align: center;
+    transition: border-color 150ms ease, background 150ms ease;
+  }
+  .theme-card:hover { background: rgba(128, 128, 128, 0.08); }
+  .theme-card.active { border-color: var(--accent); background: rgba(128, 128, 128, 0.06); }
+  .theme-card.active::after {
+    content: '✓';
+    position: absolute; top: -6px; right: -6px;
+    width: 20px; height: 20px; border-radius: 50%;
+    background: var(--accent); color: #fff;
+    font-size: 12px; font-weight: 800;
+    display: flex; align-items: center; justify-content: center;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.25);
+  }
+  .theme-card .preview {
+    position: relative; display: block;
+    aspect-ratio: 4 / 3; border-radius: 8px; overflow: hidden;
+    margin-bottom: 6px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  }
+  .preview .pv-board {
+    position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%);
+    width: 62%; height: 70%;
+    border-radius: 5px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: 1fr 1fr;
+    gap: 5%; padding: 6%;
+  }
+  .pv-board i { border-radius: 3px; }
+  .theme-card .name { display: block; font-size: 13px; font-weight: 700; }
+
+  /* 主题切换时的平滑过渡 */
+  body, h1, .btn, .score-box, .board, .bg div, .hint, .panel-card {
+    transition: background 250ms ease, color 250ms ease, box-shadow 250ms ease;
+  }
+</style>
+</head>
+<body>
+<div class="container">
+  <header>
+    <h1>2048</h1>
+    <div class="scores">
+      <div class="score-box"><div class="label">得分</div><div class="value" id="score">0</div></div>
+      <div class="score-box"><div class="label">最高分</div><div class="value" id="best">0</div></div>
+    </div>
+  </header>
+  <div class="toolbar">
+    <p>合并相同数字，拼出 <b>2048</b>！</p>
+    <div class="toolbar-actions">
+      <button class="btn" id="undo-btn" disabled title="撤销上一步 (Ctrl+Z)">↩ 撤销</button>
+      <button class="btn" id="theme-btn">🎨 个性化</button>
+      <button class="btn" id="new-game">新游戏</button>
+    </div>
+  </div>
+  <div class="board" id="board">
+    <div class="bg">
+      <div></div><div></div><div></div><div></div>
+      <div></div><div></div><div></div><div></div>
+      <div></div><div></div><div></div><div></div>
+      <div></div><div></div><div></div><div></div>
+    </div>
+    <div id="tile-layer"></div>
+    <div class="overlay" id="overlay"></div>
+  </div>
+  <p class="hint">方向键 / WASD 移动 · Ctrl+Z 撤销 · 触屏可滑动 · 点击「🎨 个性化」换主题</p>
+</div>
+
+<!-- 个性化主题面板 -->
+<div class="theme-panel" id="theme-panel">
+  <div class="panel-card">
+    <div class="panel-head">
+      <h2>个性化主题</h2>
+      <button class="panel-close" id="panel-close" aria-label="关闭">✕</button>
+    </div>
+    <p class="panel-sub">选择喜欢的页面风格，自动保存</p>
+    <div class="theme-grid" id="theme-grid"></div>
+  </div>
+</div>
+
+<script>
+(function () {
+  'use strict';
+  const SIZE = 4;
+  const GAP = 12;
+
+  const boardEl = document.getElementById('board');
+  const tileLayer = document.getElementById('tile-layer');
+  const scoreEl = document.getElementById('score');
+  const bestEl = document.getElementById('best');
+  const overlayEl = document.getElementById('overlay');
+  const themeBtn = document.getElementById('theme-btn');
+  const undoBtn = document.getElementById('undo-btn');
+  const themePanel = document.getElementById('theme-panel');
+  const themeGrid = document.getElementById('theme-grid');
+  const metaTheme = document.querySelector('meta[name="theme-color"]');
+
+  /* ================= 个性化主题 ================= */
+  // 每个主题：id 对应 CSS 中的 body[data-theme]，colors 用于面板预览
+  const THEMES = [
+    { id: 'classic', name: '经典', chrome: '#faf8ef',
+      colors: { bg: '#faf8ef', board: '#bbada0', tiles: ['#eee4da', '#f2b179', '#f65e3b', '#edc22e'] } },
+    { id: 'dark', name: '暗夜', chrome: '#14141c',
+      colors: { bg: '#14141c', board: '#20202e', tiles: ['#2c2c40', '#5749a8', '#8a4ff0', '#ffd23e'] } },
+    { id: 'ocean', name: '海洋', chrome: '#d4ecfb',
+      colors: { bg: '#d4ecfb', board: '#1f7cc0', tiles: ['#eef9ff', '#a5dcf9', '#0f76c4', '#f59e1f'] } },
+    { id: 'forest', name: '森林', chrome: '#e2f0dc',
+      colors: { bg: '#e2f0dc', board: '#3f9153', tiles: ['#f0f8e9', '#b7e094', '#3c9c2c', '#e8b03a'] } },
+    { id: 'sakura', name: '樱花', chrome: '#fbe7f0',
+      colors: { bg: '#fbe7f0', board: '#ec8ab4', tiles: ['#fdf1f6', '#f9c3da', '#e25f96', '#7d1847'] } },
+    { id: 'neon', name: '霓虹', chrome: '#0d0518',
+      colors: { bg: '#0d0518', board: '#160a2e', tiles: ['#221448', '#43299c', '#00d0ff', '#ffb800'] } },
+  ];
+
+  function applyTheme(id) {
+    let theme = THEMES.find(t => t.id === id);
+    if (!theme) theme = THEMES[0];
+    document.body.dataset.theme = theme.id;
+    if (metaTheme) metaTheme.setAttribute('content', theme.chrome);
+    try { localStorage.setItem('theme2048', theme.id); } catch (e) {}
+    themeGrid.querySelectorAll('.theme-card').forEach(card =>
+      card.classList.toggle('active', card.dataset.theme === theme.id));
+  }
+
+  // 生成主题卡片
+  THEMES.forEach(t => {
+    const card = document.createElement('button');
+    card.type = 'button';
+    card.className = 'theme-card';
+    card.dataset.theme = t.id;
+    card.innerHTML =
+      '<span class="preview" style="background:' + t.colors.bg + '">' +
+        '<span class="pv-board" style="background:' + t.colors.board + '">' +
+          t.colors.tiles.map(c => '<i style="background:' + c + '"></i>').join('') +
+        '</span>' +
+      '</span>' +
+      '<span class="name">' + t.name + '</span>';
+    card.addEventListener('click', () => applyTheme(t.id));
+    themeGrid.appendChild(card);
+  });
+
+  themeBtn.addEventListener('click', () => themePanel.classList.add('show'));
+  document.getElementById('panel-close').addEventListener('click', () => themePanel.classList.remove('show'));
+  themePanel.addEventListener('click', e => { if (e.target === themePanel) themePanel.classList.remove('show'); });
+
+  // 读取上次保存的主题
+  let savedTheme = 'classic';
+  try { savedTheme = localStorage.getItem('theme2048') || 'classic'; } catch (e) {}
+  applyTheme(savedTheme);
+
+  /* ================= 游戏逻辑 ================= */
+  // 每个方向各条线（行/列）上，第 i 个格子的坐标（i 从滑动目标边缘数起）
+  const LINE_OF = {
+    left:  (k, i) => ({ r: k, c: i }),
+    right: (k, i) => ({ r: k, c: SIZE - 1 - i }),
+    up:    (k, i) => ({ r: i, c: k }),
+    down:  (k, i) => ({ r: SIZE - 1 - i, c: k }),
+  };
+
+  let grid, tiles, score, best, won, keepPlaying, over, moving, nextId;
+  let history = []; // 上一步的棋盘快照，用于撤销
+  let currentToken = {}; // 防止动画期间重开新局后，旧动画回调串台
+
+  try { best = parseInt(localStorage.getItem('best2048'), 10) || 0; } catch (e) { best = 0; }
+  bestEl.textContent = best;
+
+  function newGame() {
+    currentToken = {};
+    grid = Array.from({ length: SIZE }, () => Array(SIZE).fill(null));
+    tiles = new Map();
+    tileLayer.innerHTML = '';
+    score = 0; won = false; keepPlaying = false; over = false; moving = false; nextId = 1;
+    history = [];
+    updateUndoBtn();
+    scoreEl.textContent = '0';
+    hideOverlay();
+    spawnTile();
+    spawnTile();
+    layout();
+  }
+
+  function cellSize() {
+    return (boardEl.clientWidth - GAP * (SIZE + 1)) / SIZE;
+  }
+
+  function layout() {
+    const cell = cellSize();
+    boardEl.style.setProperty('--cell', cell + 'px');
+    tiles.forEach(positionTile);
+  }
+
+  function positionTile(tile) {
+    const cell = cellSize();
+    const x = GAP + tile.col * (cell + GAP);
+    const y = GAP + tile.row * (cell + GAP);
+    tile.el.style.width = cell + 'px';
+    tile.el.style.height = cell + 'px';
+    tile.el.style.setProperty('--x', x + 'px');
+    tile.el.style.setProperty('--y', y + 'px');
+    tile.el.style.transform = 'translate(' + x + 'px,' + y + 'px)';
+  }
+
+  function styleTile(el, value) {
+    el.dataset.value = value;
+    el.classList.remove('d4', 'd5', 'd6', 'super');
+    if (value > 2048) el.classList.add('super');
+    const d = String(value).length;
+    if (d >= 4) el.classList.add('d' + Math.min(d, 6));
+  }
+
+  function spawnTile() {
+    const empty = [];
+    for (let r = 0; r < SIZE; r++)
+      for (let c = 0; c < SIZE; c++)
+        if (!grid[r][c]) empty.push({ r, c });
+    if (!empty.length) return null;
+    const pos = empty[Math.floor(Math.random() * empty.length)];
+    const tile = { id: nextId++, value: Math.random() < 0.9 ? 2 : 4, row: pos.r, col: pos.c };
+    const el = document.createElement('div');
+    el.className = 'tile new';
+    el.textContent = tile.value;
+    styleTile(el, tile.value);
+    tileLayer.appendChild(el);
+    tile.el = el;
+    grid[pos.r][pos.c] = tile;
+    tiles.set(tile.id, tile);
+    positionTile(tile);
+    return tile;
+  }
+
+  // 当前棋盘快照，用于撤销
+  function snapshotState() {
+    const tilesData = [];
+    for (const t of tiles.values()) tilesData.push({ id: t.id, value: t.value, row: t.row, col: t.col });
+    return { tiles: tilesData, score };
+  }
+
+  // 从快照重建棋盘（撤销用）
+  function restoreTiles(snap) {
+    currentToken = {}; // 作废进行中的动画回调
+    moving = false;
+    tileLayer.innerHTML = '';
+    grid = Array.from({ length: SIZE }, () => Array(SIZE).fill(null));
+    tiles = new Map();
+    let maxId = 0;
+    for (const d of snap.tiles) {
+      const el = document.createElement('div');
+      el.className = 'tile';
+      el.textContent = d.value;
+      styleTile(el, d.value);
+      tileLayer.appendChild(el);
+      const tile = { id: d.id, value: d.value, row: d.row, col: d.col, el };
+      grid[d.row][d.col] = tile;
+      tiles.set(d.id, tile);
+      if (d.id > maxId) maxId = d.id;
+    }
+    nextId = maxId + 1;
+    score = snap.score;
+    scoreEl.textContent = snap.score;
+    hideOverlay();
+    layout();
+  }
+
+  function updateUndoBtn() {
+    undoBtn.disabled = !history.length;
+  }
+
+  function undo() {
+    if (moving || !history.length) return;
+    const snap = history.pop();
+    history.length = 0; // 只允许撤销一步，防止反复撤销刷随机数
+    updateUndoBtn();
+    restoreTiles(snap);
+    // 根据棋盘重新推断胜利状态（撤销了达成 2048 的那一步则不再提示）
+    won = false; keepPlaying = false; over = false;
+    for (const t of tiles.values()) {
+      if (t.value >= 2048) { won = true; keepPlaying = true; break; }
+    }
+  }
+
+  // 计算一步移动的动画列表；无法移动时返回 null
+  function collectMove(dir) {
+    const anims = [];
+    let moved = false;
+    for (let k = 0; k < SIZE; k++) {
+      const cells = [];
+      for (let i = 0; i < SIZE; i++) cells.push(LINE_OF[dir](k, i));
+      const line = cells.map(p => grid[p.r][p.c]).filter(Boolean);
+      cells.forEach(p => { grid[p.r][p.c] = null; });
+      let w = 0, rd = 0;
+      while (rd < line.length) {
+        const t = line[rd];
+        const nxt = line[rd + 1];
+        const target = LINE_OF[dir](k, w);
+        if (nxt && nxt.value === t.value) {
+          t.value *= 2;
+          score += t.value;
+          grid[target.r][target.c] = t;
+          anims.push({ id: t.id, to: target, type: 'merge', newValue: t.value });
+          anims.push({ id: nxt.id, to: target, type: 'absorbed' });
+          rd += 2;
+          moved = true;
+        } else {
+          grid[target.r][target.c] = t;
+          if (t.row !== target.r || t.col !== target.c) moved = true;
+          anims.push({ id: t.id, to: target, type: 'slide' });
+          rd += 1;
+        }
+        w += 1;
+      }
+    }
+    return moved ? anims : null;
+  }
+
+  function move(dir) {
+    if (over || moving || (won && !keepPlaying)) return;
+    const snap = snapshotState();
+    const anims = collectMove(dir);
+    if (!anims) return;
+    history.push(snap);
+    updateUndoBtn();
+    moving = true;
+    const token = {};
+    currentToken = token;
+    anims.forEach(a => {
+      const tile = tiles.get(a.id);
+      tile.row = a.to.r;
+      tile.col = a.to.c;
+      positionTile(tile);
+      if (a.type === 'absorbed') tile.el.classList.add('absorbed');
+    });
+    updateScore();
+    setTimeout(() => {
+      if (currentToken !== token) return;
+      // 移除被吞并的方块
+      anims.forEach(a => {
+        if (a.type === 'absorbed') {
+          const tile = tiles.get(a.id);
+          if (tile) { tile.el.remove(); tiles.delete(a.id); }
+        }
+      });
+      // 更新合并后的数值并弹出动画
+      anims.forEach(a => {
+        if (a.type === 'merge') {
+          const tile = tiles.get(a.id);
+          tile.el.textContent = a.newValue;
+          styleTile(tile.el, a.newValue);
+          tile.el.classList.add('pop');
+        }
+      });
+      setTimeout(() => {
+        if (currentToken !== token) return;
+        anims.forEach(a => {
+          if (a.type === 'merge') {
+            const tile = tiles.get(a.id);
+            if (tile && tile.el) tile.el.classList.remove('pop');
+          }
+        });
+      }, 200);
+      // 生成新方块并判断胜负
+      const spawned = spawnTile();
+      moving = false;
+      checkWin(); // 无论是否有空格都要判定：拼出 2048 的那一步可能恰好填满棋盘
+      if (!spawned && !canMove()) {
+        over = true;
+        setTimeout(() => { if (currentToken === token && !overlayEl.classList.contains('show')) showGameOver(); }, 320);
+      }
+    }, 130);
+  }
+
+  function canMove() {
+    for (let r = 0; r < SIZE; r++) {
+      for (let c = 0; c < SIZE; c++) {
+        const t = grid[r][c];
+        if (!t) return true;
+        if (r + 1 < SIZE && grid[r + 1][c] && grid[r + 1][c].value === t.value) return true;
+        if (c + 1 < SIZE && grid[r][c + 1] && grid[r][c + 1].value === t.value) return true;
+      }
+    }
+    return false;
+  }
+
+  function checkWin() {
+    if (won || keepPlaying) return;
+    for (const t of tiles.values()) {
+      if (t.value >= 2048) { showWin(); return; }
+    }
+  }
+
+  function updateScore() {
+    scoreEl.textContent = score;
+    if (score > best) {
+      best = score;
+      bestEl.textContent = best;
+      try { localStorage.setItem('best2048', String(best)); } catch (e) {}
+    }
+    const box = scoreEl.parentElement;
+    box.classList.remove('pop');
+    void box.offsetWidth;
+    box.classList.add('pop');
+  }
+
+  function hideOverlay() {
+    overlayEl.classList.remove('show', 'win');
+    overlayEl.innerHTML = '';
+  }
+
+  function showWin() {
+    won = true;
+    overlayEl.classList.add('win');
+    overlayEl.innerHTML =
+      '<div class="msg">你赢了！🎉</div>' +
+      '<div class="sub">得分：' + score + '</div>' +
+      '<div class="row">' +
+      '<button class="btn" id="keep-going">继续游戏</button>' +
+      '<button class="btn" id="again-win">再来一局</button>' +
+      '</div>';
+    overlayEl.classList.add('show');
+    document.getElementById('keep-going').onclick = function () {
+      keepPlaying = true;
+      hideOverlay();
+      if (over) showGameOver(); // 极少数情况：拼出 2048 的一步同时让棋盘无路可走
+    };
+    document.getElementById('again-win').onclick = newGame;
+  }
+
+  function showGameOver() {
+    overlayEl.classList.remove('win');
+    overlayEl.innerHTML =
+      '<div class="msg">游戏结束</div>' +
+      '<div class="sub">得分：' + score + '</div>' +
+      '<button class="btn" id="again">再来一局</button>';
+    overlayEl.classList.add('show');
+    document.getElementById('again').onclick = newGame;
+  }
+
+  // 键盘：方向键 / WASD（主题面板打开时忽略）
+  const KEY_DIRS = {
+    arrowleft: 'left', arrowright: 'right', arrowup: 'up', arrowdown: 'down',
+    a: 'left', d: 'right', w: 'up', s: 'down',
+  };
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape') { themePanel.classList.remove('show'); return; }
+    if (themePanel.classList.contains('show')) return;
+    if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'z') {
+      e.preventDefault();
+      undo();
+      return;
+    }
+    const dir = KEY_DIRS[e.key.toLowerCase()];
+    if (!dir) return;
+    e.preventDefault();
+    move(dir);
+  });
+
+  // 触屏 / 鼠标滑动
+  let swipeStart = null;
+  boardEl.addEventListener('pointerdown', e => {
+    if (e.target.closest('button')) return;
+    swipeStart = { x: e.clientX, y: e.clientY };
+  });
+  boardEl.addEventListener('pointerup', e => {
+    if (!swipeStart) return;
+    const dx = e.clientX - swipeStart.x;
+    const dy = e.clientY - swipeStart.y;
+    swipeStart = null;
+    if (Math.max(Math.abs(dx), Math.abs(dy)) < 24) return;
+    move(Math.abs(dx) > Math.abs(dy) ? (dx > 0 ? 'right' : 'left') : (dy > 0 ? 'down' : 'up'));
+  });
+
+  undoBtn.addEventListener('click', undo);
+  document.getElementById('new-game').addEventListener('click', newGame);
+  window.addEventListener('resize', layout);
+
+  newGame();
+})();
+</script>
+</body>
+</html>
