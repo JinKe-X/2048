@@ -592,7 +592,7 @@
   }
 
   function undo() {
-    if (moving || !history.length) return;
+    if (!history.length) return;
     const snap = history.pop();
     history.length = 0; // 只允许撤销一步，防止反复撤销刷随机数
     updateUndoBtn();
@@ -675,7 +675,6 @@
         }
       });
       setTimeout(() => {
-        if (currentToken !== token) return;
         anims.forEach(a => {
           if (a.type === 'merge') {
             const tile = tiles.get(a.id);
@@ -784,6 +783,7 @@
   boardEl.addEventListener('pointerdown', e => {
     if (e.target.closest('button')) return;
     swipeStart = { x: e.clientX, y: e.clientY };
+    try { boardEl.setPointerCapture(e.pointerId); } catch (err) {}
   });
   boardEl.addEventListener('pointerup', e => {
     if (!swipeStart) return;
